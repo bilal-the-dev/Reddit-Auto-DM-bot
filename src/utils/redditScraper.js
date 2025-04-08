@@ -43,11 +43,15 @@ export const loginReddit = async () => {
 
   if (shouldDebug) await page.screenshot({ path: "./screenshots/creds.png" });
 
-  await Promise.all([loginButton.click(), page.waitForNavigation()]);
+  await loginButton.click();
 
   console.log("Clicked login!");
 
   if (shouldDebug) await page.screenshot({ path: "./screenshots/login.png" });
+
+  await page.waitForNavigation({ waitUntil: "networkidle" });
+
+  if (shouldDebug) await page.screenshot({ path: "./screenshots/home.png" });
 };
 
 export const sendChatRequest = async (redditUserId) => {
