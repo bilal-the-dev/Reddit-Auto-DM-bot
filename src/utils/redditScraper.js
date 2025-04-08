@@ -49,7 +49,7 @@ export const loginReddit = async () => {
 
   if (shouldDebug) await page.screenshot({ path: "./screenshots/login.png" });
 
-  await page.waitForNavigation({ waitUntil: "networkidle" });
+  await page.waitForNavigation({ waitUntil: "networkidle2" });
 
   if (shouldDebug) await page.screenshot({ path: "./screenshots/home.png" });
 };
