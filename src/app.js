@@ -1,0 +1,74 @@
+import { createdDmedUser } from "./database/queries.js";
+import { convertRawToCacheArray } from "./utils/parse.js";
+import { scrapeNewPosts } from "./utils/redditAPI.js";
+import { loginReddit, sendChatRequest } from "./utils/redditScraper.js";
+
+const subreddits = process.env.subreddits.split(",");
+
+const cachedData = [];
+const lastScrapedAtCache = {};
+
+await loginReddit();
+
+while (true) {
+  if (cachedData.length > 0)
+    await new Promise((res) =>
+      setTimeout(
+        () => {
+          res();
+        },
+        1000 * 60 * 1
+      )
+    );
+
+  for (const subreddit of subreddits) {
+    try {
+      console.log(`Scraping new posts for ${subreddit}`);
+
+      const data = await scrapeNewPosts(subreddit);
+
+      const { children: fetchedPosts } = data.data;
+
+      if (!lastScrapedAtCache[subreddit])
+        lastScrapedAtCache[subreddit] = Date.now();
+
+      console.log(`Fetched ${fetchedPosts.length} posts! Filtering!`);
+
+      const subredditCachedPostIds = cachedData
+        .filter((c) => c.subreddit === subreddit)
+        .map((c) => c.id);
+
+      if (subredditCachedPostIds.length === 0) {
+        console.log("First time filling in cache, returning!");
+
+        cachedData.push(...convertRawToCacheArray(fetchedPosts));
+
+        continue;
+      }
+
+      const newPosts = fetchedPosts.filter(
+        (p) =>
+          !subredditCachedPostIds.includes(p.data.id) &&
+          p.data.created_utc * 1000 > lastScrapedAtCache[subreddit] // since it sometimes give old posts and create_utc is in seconds
+      );
+
+      console.log(`Fetched ${newPosts.length} new posts!`);
+
+      for (const newPost of newPosts) {
+        const hasNotDmed = await sendChatRequest(newPost.data.author_fullname);
+
+        cachedData.push(...convertRawToCacheArray([newPost]));
+
+        if (hasNotDmed)
+          createdDmedUser.run(
+            newPost.data.author_fullname,
+            newPost.data.author
+          );
+      }
+
+      lastScrapedAtCache[subreddit] = Date.now();
+    } catch (error) {
+      console.log(error);
+    }
+  }
+}
