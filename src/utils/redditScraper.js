@@ -24,9 +24,9 @@ export const loginReddit = async () => {
   });
 
   if (shouldDebug) await page.screenshot({ path: "./screenshots/app.png" });
-  const emailInput = await page.$(">>> [name='username']");
-  const passwordInput = await page.$(">>> [name='password']");
-  const loginButton = await page.$(">>> [noun='login']");
+  const emailInput = await page.$("[name='username']");
+  const passwordInput = await page.$("[name='password']");
+  const loginButton = await page.$("[noun='login'] > button");
 
   console.log("Typing email and pass!");
 
