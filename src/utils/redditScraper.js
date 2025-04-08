@@ -9,6 +9,10 @@ export const loginReddit = async () => {
   browser = await puppeteer.launch({
     headless: process.env.NODE_ENV === "production",
     // devtools: process.env.NODE_ENV !== "production",
+    ...(process.platform === "linux" && {
+      args: ["--no-sandbox"],
+      executablePath: "/usr/bin/chromium-browser",
+    }),
   });
 
   const page = await browser.newPage();
