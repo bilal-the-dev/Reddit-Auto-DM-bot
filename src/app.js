@@ -25,9 +25,7 @@ while (true) {
     try {
       console.log(`Scraping new posts for ${subreddit}`);
 
-      const data = await scrapeNewPosts(subreddit);
-
-      const { children: fetchedPosts } = data.data;
+      const fetchedPosts = await scrapeNewPosts(subreddit);
 
       if (!lastScrapedAtCache[subreddit])
         lastScrapedAtCache[subreddit] = Date.now();
@@ -48,22 +46,19 @@ while (true) {
 
       const newPosts = fetchedPosts.filter(
         (p) =>
-          !subredditCachedPostIds.includes(p.data.id) &&
-          p.data.created_utc * 1000 > lastScrapedAtCache[subreddit] // since it sometimes give old posts and create_utc is in seconds
+          !subredditCachedPostIds.includes(p.id) &&
+          p.created_utc * 1000 > lastScrapedAtCache[subreddit] // since it sometimes give old posts and create_utc is in seconds
       );
 
       console.log(`Fetched ${newPosts.length} new posts!`);
 
       for (const newPost of newPosts) {
-        const hasNotDmed = await sendChatRequest(newPost.data.author_fullname);
+        const hasNotDmed = await sendChatRequest(newPost.author_fullname);
 
         cachedData.push(...convertRawToCacheArray([newPost]));
 
         if (hasNotDmed)
-          createdDmedUser.run(
-            newPost.data.author_fullname,
-            newPost.data.author
-          );
+          createdDmedUser.run(newPost.author_fullname, newPost.author.name);
       }
 
       lastScrapedAtCache[subreddit] = Date.now();
