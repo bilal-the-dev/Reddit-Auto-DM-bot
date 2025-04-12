@@ -23,21 +23,21 @@ while (true) {
 
   for (const subreddit of subreddits) {
     try {
-      // console.log(`Scraping new posts for ${subreddit}`);
+      console.log(`Scraping new posts for ${subreddit}`);
 
       const fetchedPosts = await scrapeNewPosts(subreddit);
 
       if (!lastScrapedAtCache[subreddit])
         lastScrapedAtCache[subreddit] = Date.now();
 
-      // console.log(`Fetched ${fetchedPosts.length} posts! Filtering!`);
+      console.log(`Fetched ${fetchedPosts.length} posts! Filtering!`);
 
       const subredditCachedPostIds = cachedData
         .filter((c) => c.subreddit === subreddit)
         .map((c) => c.id);
 
       if (subredditCachedPostIds.length === 0) {
-        // console.log("First time filling in cache, returning!");
+        console.log("First time filling in cache, returning!");
 
         cachedData.push(...convertRawToCacheArray(fetchedPosts));
 
@@ -50,7 +50,7 @@ while (true) {
           p.created_utc * 1000 > lastScrapedAtCache[subreddit] // since it sometimes give old posts and create_utc is in seconds
       );
 
-      // console.log(`Fetched ${newPosts.length} new posts!`);
+      console.log(`Fetched ${newPosts.length} new posts!`);
 
       for (const newPost of newPosts) {
         console.log(
