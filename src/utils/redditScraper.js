@@ -67,6 +67,53 @@ export const sendChatRequest = async (redditUserId) => {
 
     await page.setUserAgent(process.env.USER_AGENT);
 
+    await page.setRequestInterception(true);
+
+    page.on("request", async (request) => {
+      const url = request.url();
+      const method = request.method();
+      const headers = request.headers();
+      const postData = request.postData();
+
+      // Only interested in fetch/XHR requests
+      if (request.resourceType() === "fetch") {
+        console.log(`\n>>> FETCH REQUEST >>>`);
+        console.log(`URL: ${url}`);
+        console.log(`Method: ${method}`);
+        console.log(`Headers: ${JSON.stringify(headers, null, 2)}`);
+        if (postData) console.log(`Body: ${postData}`);
+      }
+
+      request.continue();
+    });
+
+    page.on("response", async (response) => {
+      try {
+        const request = response.request();
+        const resourceType = request.resourceType();
+        const responseHeaders = response.headers();
+        const contentType = responseHeaders["content-type"] || "";
+
+        // Only log fetch responses with application/json
+        if (
+          resourceType === "fetch" &&
+          contentType.includes("application/json")
+        ) {
+          const url = response.url();
+          const status = response.status();
+          const jsonBody = await response.json();
+
+          console.log(`\n<<< FETCH RESPONSE <<<`);
+          console.log(`URL: ${url}`);
+          console.log(`Status: ${status}`);
+          console.log(`Content-Type: ${contentType}`);
+          console.log(`JSON Body: ${JSON.stringify(jsonBody, null, 2)}`);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    });
+
     await page.goto(
       `${process.env.REDDIT_CHAT_BASE_URL}/user/${redditUserId}`,
       {
