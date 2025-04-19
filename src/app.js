@@ -58,7 +58,7 @@ while (true) {
           `Sending dm to ${newPost.author.name} (${newPost.author_fullname})`
         );
 
-        const canSendDm = lastDmSentAt + 1000 * 60 * 8 < Date.now();
+        const canSendDm = (lastDmSentAt ?? 0) + 1000 * 60 * 8 < Date.now();
 
         if (canSendDm) {
           const hasNotDmedAlready = await sendChatRequest(
