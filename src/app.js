@@ -7,6 +7,7 @@ const subreddits = process.env.subreddits.split(",");
 
 const cachedData = [];
 const lastScrapedAtCache = {};
+let lastDmSentAt;
 
 await loginReddit();
 
@@ -57,12 +58,24 @@ while (true) {
           `Sending dm to ${newPost.author.name} (${newPost.author_fullname})`
         );
 
-        const hasNotDmed = await sendChatRequest(newPost.author_fullname);
+        const canSendDm = lastDmSentAt + 1000 * 60 * 8 < Date.now();
+
+        if (canSendDm) {
+          const hasNotDmedAlready = await sendChatRequest(
+            newPost.author_fullname
+          );
+          if (hasNotDmedAlready) {
+            createdDmedUser.run(newPost.author_fullname, newPost.author.name);
+            lastDmSentAt = Date.now();
+          }
+        }
+
+        if (!canSendDm)
+          console.log(
+            "Looks like, its not been 8mins since last dm was sent, skipping!"
+          );
 
         cachedData.push(...convertRawToCacheArray([newPost]));
-
-        if (hasNotDmed)
-          createdDmedUser.run(newPost.author_fullname, newPost.author.name);
       }
 
       lastScrapedAtCache[subreddit] = Date.now();
