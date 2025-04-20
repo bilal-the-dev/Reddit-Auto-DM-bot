@@ -24,34 +24,37 @@ export const loginReddit = async () => {
   });
 
   if (shouldDebug) await page.screenshot({ path: "./screenshots/app.png" });
-  const emailInput = await page.$("[name='username']");
-  const passwordInput = await page.$("[name='password']");
-  const loginButton = await page.$("[noun='login'] > button");
 
-  console.log("Typing email and pass!");
+  if (!process.env.MANUAL_LOGIN) {
+    const emailInput = await page.$("[name='username']");
+    const passwordInput = await page.$("[name='password']");
+    const loginButton = await page.$("[noun='login'] > button");
 
-  await emailInput.tap();
-  await emailInput.type(process.env.REDDIT_EMAIL);
-  await passwordInput.tap();
-  await passwordInput.type(process.env.REDDIT_PASSWORD);
+    console.log("Typing email and pass!");
 
-  await new Promise((res) =>
-    setTimeout(() => {
-      res();
-    }, 1000 * 3)
-  );
+    await emailInput.tap();
+    await emailInput.type(process.env.REDDIT_EMAIL);
+    await passwordInput.tap();
+    await passwordInput.type(process.env.REDDIT_PASSWORD);
 
-  if (shouldDebug) await page.screenshot({ path: "./screenshots/creds.png" });
+    await new Promise((res) =>
+      setTimeout(() => {
+        res();
+      }, 1000 * 3)
+    );
 
-  await loginButton.click();
+    if (shouldDebug) await page.screenshot({ path: "./screenshots/creds.png" });
 
-  console.log("Clicked login!");
+    await loginButton.click();
 
-  if (shouldDebug) await page.screenshot({ path: "./screenshots/login.png" });
+    console.log("Clicked login!");
 
-  await page.waitForNavigation({ waitUntil: "networkidle2" });
+    if (shouldDebug) await page.screenshot({ path: "./screenshots/login.png" });
 
-  if (shouldDebug) await page.screenshot({ path: "./screenshots/home.png" });
+    await page.waitForNavigation({ waitUntil: "networkidle2" });
+
+    if (shouldDebug) await page.screenshot({ path: "./screenshots/home.png" });
+  }
 };
 
 export const sendChatRequest = async (redditUserId) => {
